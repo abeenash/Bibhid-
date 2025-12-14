@@ -18,20 +18,20 @@ passport.use(
                     return done(new Error("No email found in Google profile"), undefined);
                 }
 
-                // First, try to find user by Google ID (most reliable)
+                // at first, try to find user by Google ID (most reliable)
                 let user = await User.findOne({ googleId });
 
                 if (!user) {
-                    // If not found by Google ID, check if user exists with this email (from local auth)
+                    // if not found by Google ID, check if user exists with this email (from local auth)
                     user = await User.findOne({ email });
 
                     if (user) {
-                        // User exists via local auth -> link Google account
+                        // user exists via local auth -> link Google account
                         user.googleId = googleId;
                         user.provider = "google";
                         await user.save();
                     } else {
-                        // No existing user -> create new one
+                        // no existing user -> create new one
                         user = await User.create({
                             googleId,
                             name: profile.displayName,
