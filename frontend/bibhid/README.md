@@ -1,0 +1,1 @@
+Bibhid (विविध) is an E-commerce platform. I have used MERN as tech stack. 
