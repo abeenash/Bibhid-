@@ -20,12 +20,20 @@ export const registerUser = async (req: Request, res: Response) => {
             provider: "local",
         });
 
+        const token = generateToken(user._id.toString());
+
+        res.cookie("access_token", token, {
+            httpOnly: true,
+            secure: false, // true in production
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return res.status(201).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id.toString()),
         });
     } catch (err) {
         return res.status(500).json({ message: "Server Error" });
@@ -34,9 +42,9 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const loginUser = async (req: Request, res: Response) => {
     try {
-        const { name, email, password } = req.body;
+        const { email, password } = req.body;
 
-        const user = await User.findOne({ name, email });
+        const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
         if (!user.password) {
@@ -46,12 +54,20 @@ export const loginUser = async (req: Request, res: Response) => {
         const match = await bcrypt.compare(password, user.password);
         if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
+        const token = generateToken(user._id.toString());
+
+        res.cookie("access_token", token, {
+            httpOnly: true,
+            secure: false, // true in production
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
         return res.status(200).json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id.toString()),
         });
     }
     catch (err) {

@@ -98,7 +98,8 @@ const AdminDashboard = () => {
                 <div className="absolute bottom-4 left-4 right-4">
                     <Link
                         to="/"
-                        className="flex items-center justify-center gap-2 w-full py-2.5 border border-border rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                        className="flex items-center justify-center gap-2 w-full py-2.5 mb-2 border 
+                        border-border rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground hover:bg-violet-500 hover:border-violet-500 transition-colors"
                     >
                         Back to Store
                     </Link>

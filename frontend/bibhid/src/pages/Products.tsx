@@ -103,10 +103,10 @@ const ProductsPage = () => {
                                 onChange={(e) => setSortBy(e.target.value)}
                                 className="appearance-none px-4 py-2 pr-10 border border-border rounded-lg bg-card focus:outline-none focus:ring-2 focus:ring-primary/20"
                             >
-                                <option value="popular">Most Popular</option>
-                                <option value="newest">Newest First</option>
-                                <option value="price-low">Price: Low to High</option>
-                                <option value="price-high">Price: High to Low</option>
+                                <option value="popular" className="bg-gray-950 hover:bg-violet-500">Most Popular</option>
+                                <option value="newest" className="bg-gray-950 hover:bg-violet-500">Newest First</option>
+                                <option value="price-low" className="bg-gray-950 hover:bg-violet-500">Price: Low to High</option>
+                                <option value="price-high" className="bg-gray-950 hover:bg-violet-500">Price: High to Low</option>
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-muted-foreground" />
                         </div>

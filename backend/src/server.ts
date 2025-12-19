@@ -15,7 +15,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 app.use("/auth", authRoutes);
-// app.use("/api/auth", authRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/products", productRoutes);
 

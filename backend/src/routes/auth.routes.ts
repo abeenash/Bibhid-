@@ -1,9 +1,14 @@
 import { Router } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import { protect } from "../middleware/auth.js";
+import User from "../models/user.model.js";
+import { registerUser, loginUser } from "../controllers/auth.controller.js";
 
 const router = Router();
+
+// Local authentication routes
+router.post("/register", registerUser);
+router.post("/login", loginUser);
 
 router.get(
     "/google",
@@ -42,7 +47,7 @@ router.get(
                 maxAge: 7 * 24 * 60 * 60 * 1000,
             });
 
-            res.redirect("http://localhost:5173/");
+            res.redirect("http://localhost:5173/auth/success");
 
         } catch (error) {
             console.error("Google OAuth callback error:", error);
@@ -53,8 +58,40 @@ router.get(
     }
 );
 
-router.get("/me", protect, (req, res) => {
-    res.json(req.user)
+//create a new GET endpoint that verifies the user via cookie
+router.get("/me", async (req, res) => {
+    try {
+        const token = req.cookies.access_token;
+        if (!token) {
+            return res.status(401).json({ message: "Not authenticated" });
+        }
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+
+        const user = await User.findById(decoded.id).select("-password");
+
+        if (!user) {
+            return res.status(401).json({ message: "User not found" });
+        }
+
+        res.json({
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        });
+    } catch (error) {
+        return res.status(401).json({ message: "Invalid token" });
+    }
+});
+
+router.post("/logout", (req, res) => {
+    res.clearCookie("access_token", {
+        httpOnly: true,
+        sameSite: "lax",
+    });
+    res.json({ message: "Logged out successfully" });
 })
+
+
 
 export default router;

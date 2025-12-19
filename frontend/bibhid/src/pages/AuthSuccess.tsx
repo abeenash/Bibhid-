@@ -5,19 +5,33 @@ const AuthSuccess = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
+        const fetchUserAndRedirect = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/auth/me", {
+                    credentials: "include",
+                });
 
-        if (!token) {
-            navigate("/login");
-            return;
-        }
+                if (!response.ok) {
+                    navigate("/login");
+                    return;
+                }
 
-        // TEMP (we’ll improve this)
-        localStorage.setItem("access_token", token);
+                const userData = await response.json();
 
-        navigate("/admin"); // or "/" or "/dashboard"
-    }, []);
+                // Role-based redirect
+                if (userData.role === "admin") {
+                    navigate("/admin");
+                } else {
+                    navigate("/"); // customers go to home
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+                navigate("/login");
+            }
+        };
+
+        fetchUserAndRedirect();
+    }, [navigate]);
 
     return <p>Signing you in...</p>;
 };

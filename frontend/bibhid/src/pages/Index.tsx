@@ -4,6 +4,7 @@ import CategoryGrid from '../components/home/CategoryGrid';
 import ProductCarousel from '../components/home/ProductCarousel';
 import PromoBanner from '../components/home/PromoBanner';
 import { products } from '../data/mockData';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
     const featuredProducts = products.filter(p => p.isFeatured);
@@ -93,12 +94,12 @@ const Index = () => {
                                 placeholder="Enter your email"
                                 className="input-field flex-1 pl-2"
                             />
-                            <button
-                                type="submit"
+                            <Link
+                                to="/register"
                                 className="px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 transition-colors"
                             >
                                 Subscribe
-                            </button>
+                            </Link>
                         </form>
                     </div>
                 </div>

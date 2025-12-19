@@ -1,12 +1,42 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import axios from "axios";
 
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
-    const token = localStorage.getItem("access_token");
+    const [loading, setLoading] = useState(true);
+    const [authorized, setAuthorized] = useState(false);
 
-    if (!token) {
+
+    useEffect(() => {
+        const verify = async () => {
+            try {
+                const res = await axios.get(
+                    "http://localhost:5000/auth/me",
+                    { withCredentials: true }
+                );
+
+                if (res.data.role === "admin") {
+                    setAuthorized(true);
+                } else {
+                    setAuthorized(false);
+                }
+            } catch {
+                setAuthorized(false);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        verify();
+    }, []);
+
+    if (loading) return <p>Checking auth...</p>;
+
+    if (!authorized) {
         return <Navigate to="/login" replace />;
     }
-    return children;
+
+    return <>{children}</>;
 };
 
 export default ProtectedAdminRoute;

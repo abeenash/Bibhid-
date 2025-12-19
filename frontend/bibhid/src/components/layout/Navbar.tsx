@@ -1,17 +1,52 @@
-import { Link } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Search, ShoppingCart, User, Menu, X, ChevronDown, LogOut, UserCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CardContext';
-import { authClient } from '../../lib/authClient';
+import { handleLogout as authLogout } from '../../utils/auth.utils';
 
 const Navbar = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isSearchFocused, setIsSearchFocused] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+    const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+    const [user, setUser] = useState<{ name: string; email: string; role: string } | null>(null);
+    const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
     const { totalItems } = useCart();
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const { data: session, isPending } = authClient.useSession();
+    // we need to fetch user on component mount and route changes
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/auth/me", {
+                    credentials: "include",
+                });
+                if (response.ok) {
+                    const userData = await response.json();
+                    setUser(userData);
+                } else {
+                    // if not authenticated, clear user state
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+                setUser(null);
+            } finally {
+                setIsLoadingUser(false);
+            }
+        };
+        fetchUser();
+    }, [location]); // Re-fetch when location changes
 
-    if (isPending) return null;
+    // Logout handler
+    const handleLogout = async () => {
+        const success = await authLogout();
+        if (success) {
+            setUser(null);
+            setIsUserMenuOpen(false);
+            navigate("/");
+        }
+    };
 
     const categories = [
         { name: 'Electronics', href: '/products?category=electronics' },
@@ -63,18 +98,62 @@ const Navbar = () => {
                             <Search className="w-5 h-5 text-foreground" />
                         </button>
 
-                        {/* User */}
-                        {session ? (
-                            <div className="flex items-center gap-2 px-3 py-2">
-                                <span className="text-sm font-medium">
-                                    Hi, {session.user.name ?? session.user.email}
-                                </span>
-                                <button onClick={() => authClient.signOut()}
-                                    className="text-sm text-red-400 hover:underline">
-                                    Logout
+                        {/* User Profile / Login */}
+                        {!isLoadingUser && user && location.pathname !== '/login' && location.pathname !== '/register' ? (
+                            // Authenticated - Show user dropdown (hidden on auth pages)
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-lg transition-colors"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center">
+                                        <span className="text-white font-semibold text-sm">
+                                            {user?.name?.charAt(0).toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <span className="hidden lg:block text-sm font-medium text-foreground">
+                                        {user?.name}
+                                    </span>
+                                    <ChevronDown className="hidden lg:block w-4 h-4" />
                                 </button>
+
+                                {/* Dropdown Menu */}
+                                {isUserMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-gray-950 border border-border rounded-lg shadow-lg py-2 z-50">
+                                        <div className="px-4 py-2 border-b border-border">
+                                            <p className="text-sm font-semibold text-foreground">{user?.name}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                                        </div>
+                                        <Link
+                                            to="/profile"
+                                            className="flex items-center gap-2 px-4 py-2 hover:bg-muted transition-colors hover:bg-violet-500"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            <UserCircle className="w-4 h-4" />
+                                            <span className="text-sm">My Profile</span>
+                                        </Link>
+                                        {user?.role === 'admin' && (
+                                            <Link
+                                                to="/admin"
+                                                className="flex items-center gap-2 px-4 py-2 hover:bg-muted transition-colors hover:bg-violet-500"
+                                                onClick={() => setIsUserMenuOpen(false)}
+                                            >
+                                                <Menu className="w-4 h-4" />
+                                                <span className="text-sm">Admin Dashboard</span>
+                                            </Link>
+                                        )}
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-500/10 text-red-600 transition-colors hover:bg-red-500"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span className="text-sm">Logout</span>
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
+                            // Not authenticated - Show login button
                             <Link
                                 to="/login"
                                 className="flex items-center gap-2 px-3 py-2 hover:bg-muted rounded-lg transition-colors"
@@ -84,7 +163,6 @@ const Navbar = () => {
                             </Link>
                         )}
 
-
                         {/* Cart */}
                         <Link
                             to="/cart"
@@ -92,7 +170,7 @@ const Navbar = () => {
                         >
                             <ShoppingCart className="w-5 h-5 text-foreground" />
                             {totalItems > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-secondary text-secondary-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 w-5 h-5 bg-secondary bg-violet-500 text-secondary-foreground text-xs font-bold rounded-full flex items-center justify-center">
                                     {totalItems}
                                 </span>
                             )}
@@ -132,9 +210,6 @@ const Navbar = () => {
                             {cat.name}
                         </Link>
                     ))}
-                    <Link to="/admin" className="nav-link whitespace-nowrap text-secondary font-bold text-violet-500 hover:text-violet-600">
-                        Admin
-                    </Link>
                 </div>
             </div>
 
@@ -172,13 +247,6 @@ const Navbar = () => {
                                 {cat.name}
                             </Link>
                         ))}
-                        <Link
-                            to="/admin"
-                            className="block px-4 py-3 hover:bg-slate-950 transition-colors text-secondary font-semibold text-violet-500"
-                            onClick={() => setIsMenuOpen(false)}
-                        >
-                            Admin Dashboard
-                        </Link>
                     </div>
                 </div>
             )}

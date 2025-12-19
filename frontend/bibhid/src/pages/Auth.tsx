@@ -29,23 +29,51 @@ const AuthForm = ({ mode }: AuthFormProps) => {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            // Validate password match for registration
+            if (!isLogin && formData.password !== formData.confirmPassword) {
+                toast.error('Passwords do not match');
+                setIsLoading(false);
+                return;
+            }
 
-        if (!isLogin && formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
+            // API endpoint
+            const endpoint = isLogin ? '/auth/login' : '/auth/register';
+            const payload = isLogin
+                ? { email: formData.email, password: formData.password }
+                : { name: formData.name, email: formData.email, password: formData.password };
+
+            // Make API call
+            const response = await fetch(`http://localhost:5000${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Important for cookies
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                toast.error(data.message || 'Authentication failed');
+                setIsLoading(false);
+                return;
+            }
+
+            // Success
+            toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
+
+            // Role-based redirect
+            if (data.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/'); // customers go to home
+            }
+
+        } catch (error) {
+            toast.error('Something went wrong. Please try again.');
             setIsLoading(false);
-            return;
         }
-
-        toast.success(isLogin ? 'Welcome back!' : 'Account created successfully!');
-        navigate('/');
-        setIsLoading(false);
     };
-
-    // const handleGoogleLogin = () => {
-    //     toast.info('Google login coming soon!');
-    // };
 
     return (
         <MainLayout showFooter={false}>

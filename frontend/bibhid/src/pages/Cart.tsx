@@ -173,7 +173,7 @@ const CartPage = () => {
                                         placeholder="Enter code"
                                         className="input-field flex-1"
                                     />
-                                    <button className="px-4 py-2 border border-primary text-primary font-semibold rounded-lg hover:bg-primary hover:text-primary-foreground transition-colors">
+                                    <button className="px-4 py-2 border border-primary text-primary font-semibold rounded-lg hover:bg-primary hover:text-white transition-colors">
                                         Apply
                                     </button>
                                 </div>
@@ -181,7 +181,7 @@ const CartPage = () => {
 
                             {/* Checkout */}
                             <button
-                                className="w-full py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-primary text-primary-foreground cursor-pointer font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                                 onClick={() => toast.info('Checkout feature coming soon!')}
                             >
                                 Proceed to Checkout
